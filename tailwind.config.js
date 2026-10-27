@@ -14,10 +14,20 @@ module.exports = {
         "accent-foreground": "hsl(var(--accent-foreground))",
         positive: "hsl(var(--positive))",
         warning: "hsl(var(--warning))",
+        landing: {
+          ink: "hsl(var(--landing-ink))",
+          panel: "hsl(var(--landing-panel))",
+          paper: "hsl(var(--landing-paper))",
+          muted: "hsl(var(--landing-muted))",
+          line: "hsl(var(--landing-line))",
+          signal: "hsl(var(--landing-signal))",
+          "signal-ink": "hsl(var(--landing-signal-ink))",
+        },
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)", "Arial", "sans-serif"],
+        sans: ["var(--font-gridline-sans)", "Arial", "sans-serif"],
         mono: ["var(--font-geist-mono)", "monospace"],
+        display: ["var(--font-gridline-sans)", "Arial", "sans-serif"],
       },
       borderRadius: {
         sm: "var(--radius-sm)",

@@ -40,7 +40,11 @@ Use local React state in feature hooks. Initial selection and option labels come
 
 ## UI system
 
-Use Tailwind semantic tokens backed by CSS variables, a restrained slate-and-ink palette, compact typography, crisp dividers, and small radii. Use shadcn-style primitives for buttons, badges, cards, selects, and tabs. Charts must use SVG or a chart library with accessible labels and a textual/table equivalent. Avoid arbitrary inline styling.
+Use Tailwind semantic tokens backed by CSS variables. The workspace uses a restrained slate-and-ink palette; the public landing page uses a charcoal editorial hero, bold sans-serif display typography, neutral body surfaces, crisp dividers, and a restrained green signal accent. Use shadcn-style primitives for workspace buttons, badges, cards, selects, and tabs. Charts must use SVG or a chart library with accessible labels and a textual/table equivalent. Avoid arbitrary inline styling.
+
+## Search and social metadata
+
+`app/layout.tsx` defines the product metadata and indexability. `app/icon.svg` provides the Gridline browser icon. `app/opengraph-image.tsx` and `app/twitter-image.tsx` are thin metadata-route wrappers around the landing feature's shared, data-driven 1200 × 630 share-card image. Copy and image palette values are centralized in `dummy/landing-content.ts`. Set `NEXT_PUBLIC_SITE_URL` to the stable public deployment URL; `VERCEL_URL` is a deployment-preview fallback. Search engines and social crawlers need a stable canonical domain before the page is publicly launch-ready.
 
 ## Error and empty states
 

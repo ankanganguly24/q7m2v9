@@ -1,4 +1,4 @@
-import { AiSection } from "./AiSection";
+import { EvidenceSection } from "./EvidenceSection";
 import { AudienceSection } from "./AudienceSection";
 import { CapabilitySection } from "./CapabilitySection";
 import { ClosingCTA } from "./ClosingCTA";
@@ -19,7 +19,7 @@ export function LandingPage() {
       <ProblemSection />
       <WorkflowSection />
       <CapabilitySection />
-      <AiSection />
+      <EvidenceSection />
       <AudienceSection />
       <FAQSection />
       <ClosingCTA />

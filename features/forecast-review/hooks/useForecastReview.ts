@@ -1,31 +1,82 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { KNOWLEDGE_TIME_OPTIONS, OPERATING_DAY_OPTIONS } from "@/dummy/options";
-import { REVIEW_DAYS } from "@/dummy/fixtures";
-import { calculateMetrics, calculateRevisions, selectIntervals } from "@/features/forecast-review/utils/metrics";
+import { useEffect, useMemo, useState } from "react";
+import { OPERATING_DAY_OPTIONS, DEFAULT_DELIVERY_DATE } from "@/dummy/options";
+import { COPY } from "@/dummy/copy";
+import { fetchReviewData } from "@/features/forecast-review/api";
+import type { LiveReviewData } from "@/features/forecast-review/types";
+
+function formatCutoff(value: string): string {
+  const date = new Date(value);
+  const local = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/London",
+    timeZoneName: "short",
+  }).format(date);
+  return local;
+}
 
 export function useForecastReview() {
-  const [selectedDayId, setSelectedDayId] = useState(OPERATING_DAY_OPTIONS[0].value);
-  const [knowledgeTime, setKnowledgeTime] = useState(KNOWLEDGE_TIME_OPTIONS[0].value);
+  const [selectedDayId, setSelectedDayId] = useState(DEFAULT_DELIVERY_DATE);
+  const [requestedCutoff, setRequestedCutoff] = useState<string | null>(null);
+  const [data, setData] = useState<LiveReviewData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
-  const day = REVIEW_DAYS.find((item) => item.id === selectedDayId) ?? REVIEW_DAYS[0];
-  const intervals = useMemo(() => selectIntervals(day, knowledgeTime), [day, knowledgeTime]);
-  const metrics = useMemo(() => calculateMetrics(intervals), [intervals]);
-  const knowledgeTimestamp = Date.parse(`${day.id}T${knowledgeTime}:00Z`);
-  const availableVintages = useMemo(() => day.forecastVintages.filter((item) => Date.parse(item.publishTime) <= knowledgeTimestamp), [day, knowledgeTimestamp]);
-  const revisions = useMemo(() => calculateRevisions(availableVintages), [availableVintages]);
-  const publicationCount = new Set(availableVintages.map((item) => item.publishTime)).size;
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    setData(null);
+    setError(null);
+    fetchReviewData(selectedDayId, requestedCutoff, controller.signal)
+      .then((result) => {
+        if (!controller.signal.aborted) setData(result);
+      })
+      .catch((reason: unknown) => {
+        if (!controller.signal.aborted) {
+          setData(null);
+          setError(reason instanceof Error ? reason.message : COPY.unavailableReviewError);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
+  }, [selectedDayId, requestedCutoff, reloadToken]);
+
+  const dayLabel = useMemo(
+    () => OPERATING_DAY_OPTIONS.find((option) => option.value === selectedDayId)?.label ?? selectedDayId,
+    [selectedDayId],
+  );
+  const cutoffOptions = useMemo(
+    () => (data?.availableCutoffs ?? []).map((value) => ({ value, label: formatCutoff(value) })),
+    [data?.availableCutoffs],
+  );
+  const selectedCutoff = data?.selectedCutoff ?? requestedCutoff ?? "";
+  const publicationCount = cutoffOptions.filter((option) => Date.parse(option.value) <= Date.parse(selectedCutoff)).length;
 
   return {
-    day,
-    intervals,
-    metrics,
-    revisions,
+    data,
+    day: { id: selectedDayId, label: dayLabel },
+    intervals: data?.intervals ?? [],
+    metrics: data?.metrics ?? { maeMw: null, biasMw: null, completeIntervals: 0, totalIntervals: 0 },
+    revisions: data?.revisions ?? [],
     publicationCount,
     selectedDayId,
-    knowledgeTime,
-    setSelectedDayId,
-    setKnowledgeTime,
+    selectedCutoff,
+    cutoffOptions,
+    selectedCutoffLabel: selectedCutoff ? formatCutoff(selectedCutoff) : "",
+    loading,
+    error,
+    reload: () => setReloadToken((current) => current + 1),
+    setSelectedDayId: (value: string) => {
+      setSelectedDayId(value);
+      setRequestedCutoff(null);
+    },
+    setSelectedCutoff: (value: string) => setRequestedCutoff(value || null),
   };
 }

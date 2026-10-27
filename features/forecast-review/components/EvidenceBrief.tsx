@@ -1,4 +1,4 @@
-import { Bot, Info } from "lucide-react";
+import { ChartNoAxesCombined, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { COPY } from "@/dummy/copy";
@@ -22,7 +22,7 @@ export function EvidenceBrief({ dayLabel, knowledgeTimeLabel, maeMw, biasMw, rev
       <CardHeader className="gap-3 pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="grid size-8 place-items-center rounded-sm bg-accent/10 text-accent"><Bot aria-hidden="true" className="size-4" /></span>
+            <span className="grid size-8 place-items-center rounded-sm bg-accent/10 text-accent"><ChartNoAxesCombined aria-hidden="true" className="size-4" /></span>
             <div>
               <p className="text-xs font-bold tracking-widest text-accent">{COPY.briefEyebrow}</p>
               <h2 className="mt-1 text-sm font-semibold text-foreground">{COPY.briefTitle}</h2>

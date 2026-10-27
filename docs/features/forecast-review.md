@@ -1,81 +1,58 @@
-# Feature Specification: Forecast Review
+# Feature Specification: Day-Ahead Wind Forecast Review
 
 ## Purpose
 
-Give a procurement analyst a trustworthy retrospective of Great Britain wind forecasts: what was published by a chosen decision time, how the forecast evolved, and how it compared with actual generation.
+Help a UK utility buyer answer two questions for one delivery date: what national wind generation forecast was available by the selected day-ahead decision cutoff, and how did that forecast compare with later actual generation?
 
-## User stories and UI requirements
+## User stories
 
-- As an analyst, I can select an operating date and a “known by” time so I can reconstruct the information available at a past decision point.
-- As an analyst, I can compare the selected forecast with actual generation across half-hour periods.
-- As an analyst, I can see forecast error, mean absolute error (MAE), and signed bias, with units and a clear definition.
-- As an analyst, I can inspect forecast publication revisions so I can spot when and where the outlook changed.
-- As an analyst, I can read a concise generated-style briefing that summarizes the computed evidence without claiming a purchasing recommendation.
-- As an analyst, I can see data provenance and incomplete-data states.
+- As a buyer, I can select a delivery date in January 2026 and see the forecast values published by a clearly displayed `known by` time.
+- As a buyer, I can see the selected forecast publication time and the source dataset.
+- As an analyst, I can compare forecast and actual wind generation at 30-minute intervals.
+- As an analyst, I can inspect signed error and quantitative accuracy metrics with definitions and coverage counts.
+- As a reviewer, I can distinguish real Elexon data from any explicitly selected offline demo fixture.
+- As a user, I see an honest error or incomplete-data state when the upstream API or a series is unavailable.
 
-## In scope
+## Requirements
 
-- Single-page desktop-first analytics workspace with responsive stacking on small screens.
-- Operating-date selector and “known by” selector, both populated from fixture options.
-- KPI cards for MAE, signed bias, selected interval, and number of forecast updates.
-- Time-series visualization of actual and selected forecast, with accessible legend and tabular values.
-- Revision history list/table for the selected operating date.
-- Deterministic local “AI briefing” simulation grounded only in the selected date’s derived metrics and available fixtures.
-- Clear indication that no live AI, API, trading, or procurement execution is connected.
+- The assessment restricts data to January 2026 delivery decisions and the national `WINDFOR` and `FUELHH` datasets.
+- The UI must not imply that the app computes required purchase volume, financial impact, or trade recommendations; those require inputs outside the assessment data.
+- The decision cutoff is user-visible. Since the brief gives no exact hour, the interface must not claim an assumed time is an official gate closure.
+- A target interval uses the newest wind forecast with `publishTime <= known_by`.
+- Actual generation rows are filtered to `fuelType == WIND` and matched to forecasts by target interval, not by publish time.
+- Timestamps retain explicit timezone information. The UI may present UK local time but the API contract uses ISO 8601 timestamps.
+- Metrics use complete forecast/actual pairs only; missing values are not imputed.
 
-## Out of scope
+## Interaction and display
 
-- Forecast generation or machine learning.
-- Live Elexon API access, persistence, authentication, or backend services.
-- Demand, wholesale prices, portfolio positions, costs, or recommended purchase volumes.
-- Unsupported probabilistic confidence intervals.
+- Delivery date selection is constrained to January 2026.
+- The cutoff control lists available forecast publication times before delivery, or accepts a supported explicit timestamp; it shows the selected cutoff in UK local time and UTC.
+- Forecast chart and interval table show target time, forecast MW, actual MW, signed error MW, and missing-data state.
+- Summary shows MAE, signed bias, complete interval count, coverage, and selected forecast publication time.
+- Empty, loading, input-validation, and upstream-error states are explicit.
+- On refresh, all values come from one backend response; do not combine live values with fixture values.
 
 ## Component hierarchy
 
 ```text
-AppShell
-└── ForecastReviewPage
-    ├── PageHeading
-    ├── ReviewControls
-    ├── MetricCardGrid
-    ├── ForecastChartPanel
-    │   ├── ChartLegend
-    │   └── AccessibleIntervalTable
-    ├── EvidenceBriefPanel
-    └── RevisionHistoryPanel
+ForecastReviewPage
+├── PageHeading
+├── ReviewControls
+├── MetricCardGrid
+├── ForecastChart
+├── AccessibleIntervalTable
+└── DataStatus
 ```
 
-Shared buttons, cards, badges, select controls, and separators live in `components/ui/`. The shell owns navigation and global frame; domain display components remain in this feature.
+## Data and state boundaries
 
-## Mock-data schema
+The frontend feature owns date/cutoff selection and rendering state. The Python backend owns Elexon access, parsing, vintage selection, interval alignment, and metric calculation. Frontend types mirror the public API response; they do not duplicate business rules.
 
-`features/forecast-review/types/` defines:
+## Acceptance criteria
 
-- `ForecastVintage`: `startTime: string`, `publishTime: string`, `generationMw: number`, `source: string`.
-- `ActualGeneration`: `startTime: string`, `generationMw: number | null`, `source: string`.
-- `ReviewDay`: `id: string`, `label: string`, `forecastVintages: ForecastVintage[]`, `actuals: ActualGeneration[]`.
-- `ReviewOption`: `value: string`, `label: string`.
-
-All fixture records and all user-visible labels/options live in `dummy/`. Dates are in ISO-8601 with explicit UTC offsets. Data must be marked as illustrative/demo data in the interface and not presented as verified historical records.
-
-## State boundaries
-
-`use-forecast-review.ts` owns selected day and selected knowledge-time state. It derives the selected vintage for each target interval, the error series, aggregate metrics, revision rows, and briefing inputs via pure utilities. Components receive typed props and do not recalculate metrics or invent data.
-
-## Metric definitions
-
-- Signed error: selected forecast MW minus actual MW.
-- Absolute error: absolute value of signed error.
-- MAE: arithmetic mean of absolute error over intervals where both forecast and actual exist.
-- Signed bias: arithmetic mean of signed error over intervals where both forecast and actual exist; positive means the forecast was higher than actual.
-- Revision delta: current publication’s generation estimate minus the preceding publication’s estimate for the same target interval.
-
-If there are no complete forecast/actual pairs, metrics render as unavailable. Units are MW. No hidden extrapolation or imputation is allowed.
-
-## Interaction and copy requirements
-
-- Changing the date or knowledge time recomputes all displayed data from the fixture.
-- If no forecast existed by the selected knowledge time, show the explicit empty state.
-- The simulated briefing names the selected date/time and quotes only derived metric values, counts, or observed largest revisions.
-- AI-style briefing must be labelled as a local demo simulation, not a connected AI service.
-- All UI text comes from centralized copy definitions under `dummy/`.
+- A selected date and cutoff only use forecasts published at or before the cutoff.
+- Each actual is joined to the target interval, with no fabricated values for gaps.
+- MAE and bias match the complete pairs shown in the table.
+- `fuelType` filtering is verified against the provider payload.
+- The interface identifies Elexon as source and discloses coverage and the assessment's data limitations.
+- A backend error does not render stale fixture data as if it were live.

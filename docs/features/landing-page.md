@@ -1,28 +1,28 @@
-# Feature Specification: Public Landing Page
+# Feature Specification: Assessment Introduction Page
 
 ## Purpose
 
-Explain the focused product in plain language and let a first-time visitor move from the problem to a working local demo. The page should be editorial, polished, and easy to scan, using high-contrast type, restrained color, and real product evidence.
+Introduce the assessment app to a UK utility's day-ahead procurement team and guide the reviewer into the live forecast workspace. Keep the existing polished editorial layout, but align all claims and examples with the assessed national wind forecast workflow.
 
-## User stories and UI requirements
+## User stories
 
-- As a first-time visitor, I understand what forecast review helps an energy analyst see.
-- As a visitor unfamiliar with power markets, I can understand the simple problem: a forecast is available before delivery, actual generation arrives later, and comparing them helps teams learn.
-- As a prospective user, I can understand the AI-assisted product direction and open the local workspace demo from a clear call to action.
-- As a visitor, I can inspect a product preview before entering the workspace.
-- The page must not imply customer adoption, validated savings, live data, deployed AI, or trade recommendations. AI examples are clearly presented as product previews, not connected model output.
-- As a decision-maker, I can tell which energy teams the product is intended to serve and get answers to common questions.
+- As a utility buyer, I understand that Gridline shows the wind forecast available before delivery and compares it with actual generation afterward.
+- As a client reviewer, I can open the January 2026 workspace and inspect the source, selected cutoff, matching intervals, and accuracy metrics.
+- As an internal reviewer, I can tell what is live API data, what is a static visual sample, and what the app does not calculate.
 
-## Page sections
+## Page requirements
 
-1. Public header with product mark, short navigation anchors, and workspace CTA.
-2. Hero with one plain-language proposition, supporting explanation, primary workspace CTA, and an original dashboard preview composed from the local fixture data.
-3. “Why this matters” section that explains the forecast-versus-actual problem without unexplained market jargon.
-4. Three-step product explanation: capture the forecast available then, compare with actual, review what changed.
-5. AI section that shows an evidence-linked analyst copilot interaction, with a clearly labeled preview state.
-6. Audience section for renewable asset operators, forecasting and analytics teams, and energy investors.
-7. FAQ that explains the workflow, AI role, audience, and product boundary in plain language.
-8. Sales-oriented closing section with a clear workspace walkthrough CTA, followed by a compact footer.
+- Keep the current editorial header, hero, problem, workflow, capability, evidence, audience, FAQ, CTA, and footer sections.
+- Focus the audience on day-ahead procurement buyers and the analysts who support their decisions.
+- Remove claims that deployed AI, portfolio analytics, asset management, or investor valuation are part of this assessment app.
+- Explain that wind forecast accuracy informs a buying decision but does not calculate the amount to buy because demand and price inputs are outside scope.
+- Keep the marketing dashboard visual explicitly labelled as an illustrative preview; it must not be presented as live values.
+- Include source attribution and a link to the BMRS data licence where data is shown.
+- Provide a clear CTA into the live workspace.
+
+## Architecture
+
+The public route remains `features/landing-page/`. Copy and metadata are centralized in `dummy/landing-content.ts`. The landing-page preview can use the existing illustrative fixture, while the live workspace must fetch all current analysis from the Python API. App route files remain thin composition shells.
 
 ## Component hierarchy
 
@@ -34,28 +34,15 @@ LandingPage
 ├── ProblemSection
 ├── WorkflowSection
 ├── CapabilitySection
-├── AiSection
+├── EvidenceSection
 ├── AudienceSection
 ├── FAQSection
 ├── ClosingCTA
 └── PublicFooter
 ```
 
-## Mock data schema
-
-All public copy and navigation labels come from `dummy/landing-content.ts`. Product preview metrics and series derive from the existing typed `dummy/fixtures.ts`; do not create a second hardcoded mock dataset for the marketing page.
-
-## State boundaries
-
-The public page has no data entry or persisted state. Navigation uses local routes and section anchors only. The dashboard preview is a read-only rendering of the selected sample fixture.
-
-## Design boundaries
-
-Use an original editorial layout informed by energy analytics websites: a full-bleed charcoal hero, oversized heavy sans-serif headline with tight leading and tracking, crisp readable support text, restrained monochrome surfaces, precise dividers, and generous spacing. Match the reference's strong weight and hierarchy rather than using thin display type. Make product evidence visible in a dark, well-composed forecast preview. Keep lower sections calm and light, with strong headings and distinct sections. Include the AI workflow, capabilities, intended audiences, plain-language FAQs, and a sales-oriented CTA. Do not reuse Modo Energy or Molten Ventures copy, logos, screenshots, video, or distinctive branded artwork; do not invent customer logos, certifications, savings, or adoption claims. Do not use an independent-prototype or no-live-connection disclaimer as brand positioning; label sample data only where a specific preview needs that context.
-
 ## Search and social sharing
 
-- Provide a Gridline browser-tab icon through the App Router icon convention.
-- Set a descriptive page title, concise summary, relevant keywords, and index/follow directives in the root metadata.
-- Provide a 1200 × 630 Open Graph image and a matching X large-image card. The image uses Gridline's own name, restrained palette, and forecast-visual motif; it contains no borrowed logos or unsupported product claims.
-- Keep metadata copy and share-card text centralized in `dummy/landing-content.ts`.
+- Keep the Gridline favicon, SEO metadata, Open Graph image, and X large-image card.
+- Use titles and descriptions that accurately describe the national day-ahead wind forecast review.
+- Keep social-card content centralized and avoid unsupported customer, savings, AI, or market-recommendation claims.

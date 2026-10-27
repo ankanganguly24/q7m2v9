@@ -1,10 +1,6 @@
 import { AlertTriangle, Database, FileClock, Rows3 } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/card";
 import { WORKSPACE_COPY, SOURCE_FIELDS } from "@/dummy/workspace-content";
-import { REVIEW_DAYS } from "@/dummy/fixtures";
-
-const FORECAST_RECORD_COUNT = REVIEW_DAYS.reduce((count, day) => count + day.forecastVintages.length, 0);
-const ACTUAL_RECORD_COUNT = REVIEW_DAYS.reduce((count, day) => count + day.actuals.length, 0);
 
 export function DataSourcesPage() {
   return (
@@ -17,8 +13,8 @@ export function DataSourcesPage() {
 
       <section className="grid gap-3 sm:grid-cols-3">
         <InfoCard icon={FileClock} title={WORKSPACE_COPY.sourcesCoverageTitle} value={WORKSPACE_COPY.sourcesCoverageBody} />
-        <InfoCard icon={Rows3} title={WORKSPACE_COPY.sourcesForecastCount} value={String(FORECAST_RECORD_COUNT)} detail={WORKSPACE_COPY.sourceLabelForecast} />
-        <InfoCard icon={Database} title={WORKSPACE_COPY.sourcesActualCount} value={String(ACTUAL_RECORD_COUNT)} detail={WORKSPACE_COPY.sourceLabelActual} />
+        <InfoCard icon={Rows3} title={WORKSPACE_COPY.sourcesForecastCount} value={WORKSPACE_COPY.sourceLabelForecast} detail={WORKSPACE_COPY.sourceForecast} />
+        <InfoCard icon={Database} title={WORKSPACE_COPY.sourcesActualCount} value={WORKSPACE_COPY.sourceLabelActual} detail={WORKSPACE_COPY.sourceActual} />
       </section>
 
       <Card className="overflow-hidden">
@@ -53,6 +49,12 @@ export function DataSourcesPage() {
           <h2 className="text-sm font-semibold text-foreground">{WORKSPACE_COPY.sourcesBoundaryTitle}</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">{WORKSPACE_COPY.sourcesBoundaryBody}</p>
         </div>
+      </Card>
+
+      <Card className="grid gap-2 p-5 text-xs leading-relaxed text-muted-foreground">
+        <p>{WORKSPACE_COPY.elexonAttribution}</p>
+        <p>{WORKSPACE_COPY.elexonIndependence}</p>
+        <a className="w-fit font-semibold text-accent underline" href={WORKSPACE_COPY.elexonLicenceUrl} rel="noreferrer" target="_blank">{WORKSPACE_COPY.elexonLicenceLabel}</a>
       </Card>
     </div>
   );

@@ -1,59 +1,75 @@
 # High-Level Design
 
-## Product
+## Product and assessment objective
 
-Forecast Review is a frontend-only prototype for an electricity procurement analyst reviewing Great Britain wind forecasts. It helps answer: “What forecast was available at the time, how did it change, and what actually happened?” This is a focused forecast-evaluation workflow, not a trading or procurement recommendation system.
+Gridline is an assessment prototype for a UK utility's day-ahead procurement team. It shows national wind generation forecasts available by an explicitly selected decision cutoff and compares those forecasts with subsequent national wind generation outturn. The app supports review of the wind signal; the supplied data does not include demand, prices, contracts, or a buyer's position, so it must not calculate procurement volume, cost, or savings.
 
-## Scope and constraints
+The assessment scope is limited to Elexon BMRS `WINDFOR` and `FUELHH` data relevant to delivery dates in January 2026. This is not the investor workflow or a general renewable-asset SaaS product.
 
-- Next.js App Router, TypeScript, and Tailwind CSS.
-- All values are local fixtures in `dummy/`; no backend, database, or live API.
-- All visible copy, labels, navigation items, and display constants are centralized in `dummy/`.
-- Forecast metrics are calculated from the typed fixture data by feature utilities. AI-style copy is a deterministic local simulation and must not imply that an LLM or live service is connected.
-- The interface must not recommend a purchase quantity: demand, prices, and the buyer’s contracted position are not in scope.
-- Use design tokens through CSS variables and Tailwind semantic colors. Avoid inline styles and arbitrary colors.
+## Stack and deployment
 
-## Data flow
+- Frontend: existing Next.js App Router, React, TypeScript, and Tailwind application.
+- Backend: Python 3 and FastAPI. It owns Elexon requests, response validation/normalization, date and cutoff selection, and derived metrics.
+- Data source: public Elexon Insights REST API. No API key is required. Requests use the dataset stream endpoints documented by Elexon.
+- Local orchestration: Docker Compose starts the frontend and backend. The frontend reads the backend URL from configuration.
+- CI: GitHub Actions installs both stacks, runs Python tests, checks frontend types/build, and validates the Docker configuration where feasible.
+- Deployment: frontend on Vercel and backend on a compatible public service. The exact hosting arrangement and public URL must be recorded in README.
 
-`dummy/fixtures.ts` exports typed forecast-vintage and actual-generation records using schemas in `features/forecast-review/types/`. `features/forecast-review/utils/metrics.ts` derives interval error, absolute error, signed bias, aggregate accuracy metrics, and revision amounts. Feature hooks select a date and an “as known at” time, then derive the visible series and summary. Components render only derived values and centralized copy. No feature component owns hardcoded fixture arrays or calculation rules.
+## Data contract and flow
 
-Each forecast record has a target interval (`startTime`), publication timestamp (`publishTime`), generation estimate in MW, and source identifier. Actual records have target interval, actual generation in MW, and source identifier. The selected forecast vintage for an interval is the newest publication at or before the selected knowledge time. If none is available, the UI shows that the forecast was unavailable rather than substituting a later forecast.
+1. The browser requests a delivery date and explicit `known_by` timestamp from the FastAPI backend.
+2. The backend validates that the delivery date is in January 2026 and that `known_by` precedes delivery. It requests `WINDFOR` forecast vintages published by the cutoff and `FUELHH` wind outturn for the delivery date.
+3. The backend validates provider payloads, normalizes timestamps to UTC instants while retaining the settlement date/period, filters `fuelType == WIND`, and selects the latest forecast vintage available by `known_by` for each target interval.
+4. The backend aligns records on target interval, leaves unmatched intervals explicitly unavailable, and calculates forecast-minus-actual error, absolute error, MAE, and signed bias over complete pairs only.
+5. The frontend renders the selected forecast, actual outturn, accuracy measures, source and publication timestamps, and coverage/missing-data information.
 
-## Routing and layout
+The API adapter is isolated from metric calculation. Tests use saved, small response fixtures; runtime data comes from the live Elexon API. Provider failures return a typed error and are never silently replaced by invented values.
 
-- `/` is the public landing page, implemented by `features/landing-page/`.
-- `/workspace` is the product overview.
-- `/workspace/forecast-review` is the forecast-vintage and error review workflow.
-- `/workspace/performance` compares forecast accuracy across the illustrative review days.
-- `/workspace/data-sources` explains the fixture fields, coverage, and provenance limits.
-- `app/layout.tsx` owns document metadata, font setup, and global styles. Route files under `app/` only compose the corresponding feature and shared shell.
-- Public site and workspace are separate layout experiences. The public page uses a spacious editorial marketing shell. Workspace routes share a compact product header, responsive left navigation rail, and main analytics area.
-- At narrow widths, workspace navigation becomes a horizontal scrollable strip and data tables remain horizontally scrollable.
+## API surface
 
-## Feature boundaries
+- `GET /api/health`: service health.
+- `GET /api/review?delivery_date=YYYY-MM-DD&known_by=<ISO-8601>`: selected forecast series, actual series, coverage, provenance, and calculated metrics.
+- `GET /api/dates`: January 2026 delivery dates supported by the application.
 
-`features/landing-page/` owns public-page sections and presentation. `features/workspace/` owns the shared workspace shell, overview, performance, and data-source pages. `features/forecast-review/` owns forecast selection state, calculations, charts, scorecards, revision history, and the simulated evidence-based briefing. Each feature exposes supported imports from its `index.ts`; other features and route files do not reach into its internals. Shared UI such as metric cards lives under global `components/`. The chart and table share the same derived series so values cannot drift between views. Global `components/` contains reusable UI primitives and shared presentation components.
+The frontend may show a clearly labelled demo fixture only if the assessment demo needs an offline mode. Live data and fixture data must never be mixed in a single result.
 
-## State management
+## Frontend routing and state
 
-Use local React state in feature hooks. Initial selection and option labels come from `dummy/`. Forecast review state is limited to selected operating date and selected knowledge time. Workspace navigation uses the active pathname. No global store or persistence is required for this prototype.
+- `/` remains the product introduction.
+- `/workspace` is the day-ahead wind forecast decision overview.
+- `/workspace/forecast-review` shows the selected delivery date, selected decision cutoff, wind forecast available by then, actual outturn, and interval errors.
+- `/workspace/performance` compares January 2026 forecast accuracy by delivery date using backend-derived results.
+- `/workspace/data-sources` explains the Elexon datasets, fields, publication timing, units, coverage, and limitations.
 
-## UI system
+Date and cutoff state live in the forecast-review feature. Copy, labels, navigation, and user-facing constants remain centralized under `dummy/`. App route files remain thin composition shells. Cross-feature imports use public feature entry points.
 
-Use Tailwind semantic tokens backed by CSS variables. The workspace uses a restrained slate-and-ink palette; the public landing page uses a charcoal editorial hero, bold sans-serif display typography, neutral body surfaces, crisp dividers, and a restrained green signal accent. Use shadcn-style primitives for workspace buttons, badges, cards, selects, and tabs. Charts must use SVG or a chart library with accessible labels and a textual/table equivalent. Avoid arbitrary inline styling.
+## Decision cutoff
 
-## Search and social metadata
+The assessment says decisions are made one day ahead but does not specify a clock time. The interface therefore makes `known_by` explicit and displays it in the user's local market time plus UTC. The default must be documented and must not be described as an official market deadline unless separately verified. Forecast availability is determined by `publishTime <= known_by`.
 
-`app/layout.tsx` defines the product metadata and indexability. `app/icon.svg` provides the Gridline browser icon. `app/opengraph-image.tsx` and `app/twitter-image.tsx` are thin metadata-route wrappers around the landing feature's shared, data-driven 1200 × 630 share-card image. Copy and image palette values are centralized in `dummy/landing-content.ts`. Set `NEXT_PUBLIC_SITE_URL` to the stable public deployment URL; `VERCEL_URL` is a deployment-preview fallback. Search engines and social crawlers need a stable canonical domain before the page is publicly launch-ready.
+## Accuracy definitions
 
-## Error and empty states
+- Interval signed error = forecast MW minus actual MW.
+- Absolute error = absolute value of signed error.
+- MAE = mean absolute error over target intervals with both selected forecast and actual values.
+- Signed bias = mean signed error over those complete intervals; positive means forecast generation exceeded actual generation.
+- Missing values remain missing and are excluded from these metrics; coverage counts are visible.
 
-Represent missing actuals, no forecast available as of the selected time, and incomplete periods explicitly. Never fill gaps with invented values. Fixture provenance is visible in the interface. Simulated AI briefing text must be assembled only from the derived metrics and fixture records.
+All values are in MW. Do not add unsupported confidence ranges or procurement advice.
 
-## Initial implementation sequence
+## Reliability and security
 
-1. Add typed fixture schemas and centralized copy/options in `dummy/`.
-2. Define each route feature in `docs/features/` before implementing its components.
-3. Implement feature utilities and state hooks.
-4. Build the public page and shared workspace shell using design tokens.
-5. Review routes and interactions against feature specs and scope boundaries.
+- Set timeouts for external HTTP calls and handle upstream errors, invalid payloads, and empty responses explicitly.
+- Validate dates, cutoff timestamps, and upstream data before calculation.
+- Keep provider URLs and timeouts configurable; no secrets are expected for the public Elexon endpoint.
+- Configure CORS narrowly for the deployed frontend origin.
+- Add request-level tests for invalid input, upstream failures, and incomplete data.
+- Avoid logging sensitive or unnecessary data; current input contains no customer-specific data.
+
+## Out of scope
+
+Authentication, persistence, customer uploads, live trading, procurement recommendations, prices, demand, savings estimates, investors' asset valuation, forecast model training, and a production 24/7 market-critical service.
+
+## Required delivery items
+
+The assessment also requires an anonymous-named public GitHub repository, a README with repository structure/run/deployed URL/AI-tool disclosure, Docker, deployment on Vercel or Heroku, and one unlisted YouTube video of at most 10 minutes: a client overview (up to 5 minutes) plus technical walkthrough (up to 5 minutes). All submitted URLs must be checked in an incognito window. Keep total assignment effort within the stated 16-hour limit.

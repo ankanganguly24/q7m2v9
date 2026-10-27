@@ -40,3 +40,23 @@ export interface ForecastRevision {
   previousPublishTime: string;
   currentPublishTime: string;
 }
+
+export interface ReviewMetrics {
+  maeMw: number | null;
+  biasMw: number | null;
+  completeIntervals: number;
+  totalIntervals: number;
+}
+
+export interface LiveReviewData {
+  deliveryDate: string;
+  selectedCutoff: string;
+  availableCutoffs: string[];
+  selectedForecastPublishTime: string | null;
+  forecastSource: string;
+  actualSource: string;
+  retrievedAt: string;
+  metrics: ReviewMetrics;
+  intervals: ForecastInterval[];
+  revisions: ForecastRevision[];
+}

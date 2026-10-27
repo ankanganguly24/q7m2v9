@@ -13,7 +13,7 @@ The assessment scope is limited to Elexon BMRS `WINDFOR` and `FUELHH` data relev
 - Data source: public Elexon Insights REST API. No API key is required. Requests use the dataset stream endpoints documented by Elexon.
 - Local orchestration: Docker Compose starts the frontend and backend. The frontend reads the backend URL from configuration.
 - CI: GitHub Actions installs both stacks, runs Python tests, checks frontend types/build, and validates the Docker configuration where feasible.
-- Deployment: frontend on Vercel and backend on a compatible public service. The exact hosting arrangement and public URL must be recorded in README.
+- Deployment: Vercel Services hosts the Next.js frontend and FastAPI backend under one deployment URL. `/api/*` routes to FastAPI and other routes go to Next.js. In production, the browser uses same-origin API paths; a configurable base URL is retained for local development and Docker.
 
 ## Data contract and flow
 
@@ -62,7 +62,7 @@ All values are in MW. Do not add unsupported confidence ranges or procurement ad
 - Set timeouts for external HTTP calls and handle upstream errors, invalid payloads, and empty responses explicitly.
 - Validate dates, cutoff timestamps, and upstream data before calculation.
 - Keep provider URLs and timeouts configurable; no secrets are expected for the public Elexon endpoint.
-- Configure CORS narrowly for the deployed frontend origin.
+- Keep CORS limited to configured local or separately hosted frontend origins. The Vercel Services deployment uses same-origin routing.
 - Add request-level tests for invalid input, upstream failures, and incomplete data.
 - Avoid logging sensitive or unnecessary data; current input contains no customer-specific data.
 
@@ -72,4 +72,4 @@ Authentication, persistence, customer uploads, live trading, procurement recomme
 
 ## Required delivery items
 
-The assessment also requires an anonymous-named public GitHub repository, a README with repository structure/run/deployed URL/AI-tool disclosure, Docker, deployment on Vercel or Heroku, and one unlisted YouTube video of at most 10 minutes: a client overview (up to 5 minutes) plus technical walkthrough (up to 5 minutes). All submitted URLs must be checked in an incognito window. Keep total assignment effort within the stated 16-hour limit.
+The assessment also requires an anonymous-named public GitHub repository, a README with repository structure/run/deployed URL/AI-tool disclosure, Docker, deployment on Vercel or Heroku, and one unlisted YouTube video of at most 10 minutes: a client overview (up to 5 minutes) plus technical walkthrough (up to 5 minutes). All submitted URLs must be checked in an incognito window. Keep total assignment effort within the stated 16-hour limit. Current Vercel Services feature availability and usage charges must be confirmed in the deployment account before publishing.

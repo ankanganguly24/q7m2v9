@@ -38,7 +38,7 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000`. Set `NEXT_PUBLIC_API_BASE_URL` if the backend is hosted elsewhere. Set `FRONTEND_ORIGINS` on the backend to the exact frontend origins allowed to call it.
+Open `http://localhost:3000`. For local development, copy `.env.example` to `.env.local`; the frontend then calls the backend on `http://localhost:8000`. If the backend runs elsewhere, set `NEXT_PUBLIC_API_BASE_URL` to its base URL and set `FRONTEND_ORIGINS` on the backend to the exact frontend origins allowed to call it.
 
 ## Tests and checks
 
@@ -64,11 +64,13 @@ Backend tests use mocked Elexon responses and do not require live API access. Gi
 - `docs/` — assessment-aligned architecture and feature specifications.
 - `.github/workflows/ci.yml` — continuous integration workflow.
 - `compose.yaml` and Dockerfiles — local container setup.
+- `vercel.json` — Vercel Services routing for the frontend and FastAPI backend.
 
 ## Deployment and assessment submission
 
-- Deployed application: add the public Vercel or Heroku URL after deployment.
-- API base URL: configure `NEXT_PUBLIC_API_BASE_URL` in the frontend deployment and `FRONTEND_ORIGINS` in the backend deployment.
+- Anonymous-named public repository: [q7m2v9](https://github.com/ankanganguly24/q7m2v9). The repository name is random; the GitHub account remains visible.
+- Vercel deployment: import this repository, set the framework to **Services**, and deploy using the routing in `vercel.json`. The app sends production API requests to the same-origin `/api` paths. Do not set `NEXT_PUBLIC_API_BASE_URL` in Vercel unless the API is hosted separately.
+- Deployed application: pending Vercel account access, Services availability, and deployment approval.
+- For Vercel Services, verify plan access and usage pricing in the account before deployment. The feature is currently beta and usage-based.
 - AI tools: AI tools were used to assist with research, implementation, and test authoring.
-- Submission repository: the assessment asks for a public repository with an anonymous random name. The current repository name is descriptive, so use an anonymous-named public repository for the final submission.
 - Demo video: submit one unlisted video of no more than 10 minutes, with up to 5 minutes for the client walkthrough and up to 5 minutes for the technical review.

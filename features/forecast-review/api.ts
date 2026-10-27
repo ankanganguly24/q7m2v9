@@ -1,7 +1,10 @@
 import type { ForecastInterval, ForecastRevision, LiveReviewData, ReviewMetrics } from "@/features/forecast-review/types";
 import { COPY } from "@/dummy/copy";
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000").replace(/\/$/, "");
+const API_BASE_URL = (
+  process.env.NEXT_PUBLIC_API_BASE_URL
+  ?? (process.env.NODE_ENV === "development" ? "http://localhost:8000" : "")
+).replace(/\/$/, "");
 
 interface ApiReviewMetrics {
   mae_mw: number | null;
@@ -141,7 +144,7 @@ export async function fetchReviewData(
   knownBy: string | null,
   signal: AbortSignal,
 ): Promise<LiveReviewData> {
-  const url = new URL(`${API_BASE_URL}/api/review`);
+  const url = new URL(`${API_BASE_URL}/api/review`, window.location.origin);
   url.searchParams.set("delivery_date", deliveryDate);
   if (knownBy) url.searchParams.set("known_by", knownBy);
 
@@ -159,7 +162,8 @@ export async function fetchMonthPerformance(signal: AbortSignal): Promise<{
   days: Array<{ deliveryDate: string; selectedCutoff: string; metrics: ReviewMetrics }>;
   totalMetrics: ReviewMetrics;
 }> {
-  const response = await fetch(`${API_BASE_URL}/api/performance`, {
+  const url = new URL(`${API_BASE_URL}/api/performance`, window.location.origin);
+  const response = await fetch(url, {
     signal,
     headers: { Accept: "application/json" },
   });

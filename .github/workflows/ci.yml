@@ -44,6 +44,7 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci
+      - run: node -e "JSON.parse(require('node:fs').readFileSync('vercel.json', 'utf8'))"
       - run: npm run typecheck
       - run: npm run build
 

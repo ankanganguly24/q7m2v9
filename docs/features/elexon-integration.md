@@ -9,6 +9,7 @@ Provide reliable, testable access to the public Elexon Insights API for the asse
 - Forecasts: `GET /datasets/WINDFOR/stream`, filtered by publication-time window; relevant fields are `publishTime`, `startTime`, and `generation`.
 - Actuals: `GET /datasets/FUELHH/stream`, filtered by settlement date and `fuelType=WIND`; relevant fields are `startTime`, `generation`, `fuelType`, and `publishTime`.
 - Base URL: `https://data.elexon.co.uk/bmrs/api/v1`.
+- Production browser requests use same-origin `/api` routes when deployed as Vercel Services. Local development and Docker can override the API base with `NEXT_PUBLIC_API_BASE_URL`.
 
 ## Backend behavior
 

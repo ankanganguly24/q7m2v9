@@ -65,6 +65,7 @@ Backend tests use mocked Elexon responses and do not require live API access. Gi
 - `.github/workflows/ci.yml` — continuous integration workflow.
 - `compose.yaml` and Dockerfiles — local container setup.
 - `vercel.json` — Vercel Services routing for the frontend and FastAPI backend.
+- `docs/demo-script.md` — timed assessment walkthrough for the client and technical sections.
 
 ## Deployment and assessment submission
 

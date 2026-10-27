@@ -12,7 +12,7 @@ class Settings:
 def get_settings() -> Settings:
     origins = os.getenv(
         "FRONTEND_ORIGINS",
-        "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001",
+        "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001",
     )
     return Settings(
         elexon_base_url=os.getenv(

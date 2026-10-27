@@ -24,6 +24,21 @@ def test_health_endpoint_is_available() -> None:
     assert response.json() == {"status": "ok"}
 
 
+def test_cors_allows_the_open_local_workspace_origin() -> None:
+    client = TestClient(create_app(StubService()))
+
+    response = client.options(
+        "/api/health",
+        headers={
+            "Origin": "http://127.0.0.1:3001",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://127.0.0.1:3001"
+
+
 def test_invalid_review_request_returns_validation_response() -> None:
     client = TestClient(create_app(StubService()))
 
